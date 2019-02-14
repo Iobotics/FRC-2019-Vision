@@ -18,6 +18,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import edu.wpi.cscore.AxisCamera;
+import edu.wpi.cscore.HttpCamera;
 import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSink;
@@ -71,12 +73,21 @@ import org.opencv.core.Mat;
 public final class Main {
   private static edu.wpi.first.networktables.NetworkTable outTable;
   private static edu.wpi.first.networktables.NetworkTable testTable;
-  private static NetworkTableEntry testButton;
-  private static NetworkTableEntry button;
-  private static NetworkTableInstance inst;
-  private static NetworkTableInstance testInst;
+  //private static NetworkTableEntry testButton;
+  //private static NetworkTableEntry testNumber;
+
+  private static NetworkTableEntry buttonY;
+  //private static NetworkTableInstance testInst;
+
+  private static boolean pressed = false;
+  private static boolean can = false;
+  private static boolean unPressed = true;
+
+  private static int cycle = 1;
 
   private static String configFile = "/boot/frc.json";
+
+  private static HttpCamera limelight;
 
   @SuppressWarnings("MemberName")
   public static class CameraConfig {
@@ -244,12 +255,16 @@ public final class Main {
       ntinst.startClientTeam(team); //Set the address for the client
     }
     outTable = ntinst.getTable("outTable");
-    button = outTable.getEntry("aButton");
+    buttonY = outTable.getEntry("yButton");
     
-    testInst = NetworkTableInstance.getDefault();
-    testInst.startClientTeam(2438);
-    testTable = testInst.getTable("testTable");
-    testButton = testTable.getEntry("testButton");
+    limelight = new HttpCamera("Limelight" , "http://limelight.local:5800"); //http://10.24.36.60:5800 //http://limelight.local:5800
+    limelight.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+
+    //testInst = NetworkTableInstance.getDefault();
+    //testInst.startClientTeam(2438);
+    //testTable = testInst.getTable("testTable");
+    //testButton = testTable.getEntry("testButton");
+    //testNumber = testTable.getEntry("testNumber");
 
     // start cameras
     List<VideoSource> cameras = new ArrayList<>();
@@ -279,15 +294,41 @@ public final class Main {
 
     // loop forever
     for (;;) {
-      testButton.setBoolean(button.getBoolean(false));
-      
-      if(button.getBoolean(false))
+      //testButton.setBoolean(buttonY.getBoolean(false));
+      //testNumber.setNumber(cycle);
+      pressed = buttonY.getBoolean(false);
+      if(pressed && unPressed)
+      {
+        can = true;
+        unPressed = false;
+      }
+      else if(!pressed)
+      {
+        unPressed = true;
+      }
+
+      if(can && cycle <= 2)
+      {
+        cycle++;
+        can = false;
+      }
+      else if(can && cycle >= 3)
+      {
+        cycle = 1;
+        can = false;
+      }
+
+      if(cycle == 1)
       {
         server.setSource(cameras.get(0));
       }
-      else
+      else if(cycle == 2)
       {
         server.setSource(cameras.get(1));
+      }
+      else if(cycle == 3)
+      {
+        server.setSource(limelight);
       }
     }
   }
