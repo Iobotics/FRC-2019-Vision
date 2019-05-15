@@ -71,8 +71,11 @@ import org.opencv.core.Mat;
  */
 
 public final class Main {
-  private static edu.wpi.first.networktables.NetworkTable outTable;
-  private static edu.wpi.first.networktables.NetworkTable testTable;
+  private static edu.wpi.first.networktables.NetworkTable outTable; 
+  // Table that gets button values from the robot and sends them to the rasberry PI
+  private static edu.wpi.first.networktables.NetworkTable testTable; 
+  // Table used for getting values from the robot to check if values are being read by the rasberry PI
+
   //private static NetworkTableEntry testButton;
   //private static NetworkTableEntry testNumber;
 
@@ -258,6 +261,7 @@ public final class Main {
     buttonY = outTable.getEntry("yButton");
     
     limelight = new HttpCamera("Limelight" , "http://limelight.local:5800"); //http://10.24.36.60:5800 //http://limelight.local:5800
+    // Camera stream
     limelight.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
 
     //testInst = NetworkTableInstance.getDefault();
@@ -319,7 +323,7 @@ public final class Main {
       }
 
       if(cycle == 1)
-      {
+      { //Sets the camera feed source
         server.setSource(cameras.get(0));
       }
       else if(cycle == 2)
